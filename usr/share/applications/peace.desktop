@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Peace
+Path=/usr/bin
+Exec=peace
+Icon=/usr/share/appdata/Peace/peace.png
+Terminal=false
+Categories=Games;
+Name[en_US]=Peace

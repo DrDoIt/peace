@@ -1,0 +1,213 @@
+#!/usr/bin/python3
+
+import time
+import threading
+import gi
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk, GLib
+
+# Retrieve image
+img = Gtk.Image.new_from_file('/usr/share/appdata/Peace/peace.png')
+calm_gif = Gtk.Image.new_from_file('/usr/share/appdata/Peace/peace_calm.gif')
+bal_gif = Gtk.Image.new_from_file('/usr/share/appdata/Peace/peace_centered.gif')
+energy_gif = Gtk.Image.new_from_file('/usr/share/appdata/Peace/peace_energized.gif')
+
+
+# Variables
+state = 0
+buddha_text = ""
+scale_value = 1
+
+def countdown(t):
+    while t > 0:
+        time.sleep(1)
+        t -= 1
+
+def calm_clicked(widget):
+    global state, mode
+    state = 1
+    type = 1
+    update_ui(type)
+    threading.Thread(target=breathing_exercise, args=(type,)).start()
+
+def bal_clicked(widget):
+    global state, mode
+    state = 1
+    type = 2
+    update_ui(type)
+    threading.Thread(target=breathing_exercise, args=(type,)).start()
+    
+def energy_clicked(widget):
+    global state, mode
+    state = 1
+    type = 3
+    update_ui(type)
+    threading.Thread(target=breathing_exercise, args=(type,)).start()
+
+def breathing_exercise(type):
+    global buddha_text, scale_value
+    for _ in range(int(scale_value)):
+        if type == 1:
+            buddha_text = "Inhale"
+            GLib.idle_add(update_label, buddha_text)
+            countdown(4)
+            buddha_text = "Hold"
+            GLib.idle_add(update_label, buddha_text)
+            countdown(7)
+            buddha_text = "Release"
+            GLib.idle_add(update_label, buddha_text)
+            countdown(8)
+            buddha_text = ""
+        elif type == 2:
+            buddha_text = "Inhale"
+            GLib.idle_add(update_label, buddha_text)
+            countdown(4)
+            buddha_text = "Hold"
+            GLib.idle_add(update_label, buddha_text)
+            countdown(4)
+            buddha_text = "Release"
+            GLib.idle_add(update_label, buddha_text)
+            countdown(4)
+            buddha_text = "Hold"
+            GLib.idle_add(update_label, buddha_text)
+            countdown(4)
+            buddha_text = ""
+        elif type == 3:
+            buddha_text = "Inhale"
+            GLib.idle_add(update_label, buddha_text)
+            countdown(6)
+            buddha_text = "Release!"
+            GLib.idle_add(update_label, buddha_text)
+            countdown(2)
+            buddha_text = ""
+    GLib.idle_add(update_label, buddha_text)
+    GLib.idle_add(reset_ui)
+
+def css_context(item,):
+    item_con = item.get_style_context()
+    item_con.add_provider(provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+
+def remove_pg2():
+        pg2_items = [calm_gif,bal_gif,energy_gif]
+        for item in pg2_items:
+            grid.remove(item) 
+
+def scale_changed(scale):
+    global scale_value
+    scale_value = scale.get_value()
+    return scale_value
+
+def update_label(text):
+    bud_text_display.set_text(text)
+    return False
+
+def update_ui(type):
+    pg1_items = [text_display,calm_btn,bal_btn,energy_btn,slider]
+    for item in pg1_items:
+        grid.remove(item)
+    if state == 1:
+        if type == 1:
+            grid.attach(calm_gif, 4, 1, 1, 1)
+            main_window.show_all()
+            main_window.resize(1,1)
+        elif type == 2:
+            grid.attach(bal_gif, 4, 1, 1, 1)
+            main_window.show_all()
+            main_window.resize(1,1)
+        elif type == 3:
+            grid.attach(energy_gif, 4, 1, 1, 1)
+            main_window.show_all()
+            main_window.resize(1,1)
+    return state
+
+def reset_ui():
+    global state, mode
+    state = 0
+    remove_pg2()
+    grid.attach(text_display, 0, 0, 3, 1)
+    grid.attach(calm_btn, 0, 1, 1, 1)
+    grid.attach(bal_btn, 1, 1, 1, 1)
+    grid.attach(energy_btn, 2, 1, 1, 1)
+    grid.attach(slider, 0,2,3,1)
+    main_window.show_all()
+    main_window.resize(1,1)
+    return False
+
+# Main window and grid
+main_window = Gtk.Window(title="Peace")
+main_window.set_default_size(1,1)
+main_window.set_border_width(50)
+
+
+# Contents
+label_text = "How would you like to breathe?"  
+text_display = Gtk.Label(label=label_text)
+text_display.set_line_wrap(True)
+bud_text_display = Gtk.Label(label=buddha_text)
+
+# Slide selection
+slider = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, 1, 3,1)
+slider.connect("value-changed", scale_changed)
+slider.set_name("slider")
+
+## Buttons
+calm_btn = Gtk.Button(label="Calm")
+calm_btn.connect("clicked",calm_clicked)
+bal_btn = Gtk.Button(label="Balanced")
+bal_btn.connect("clicked",bal_clicked)
+energy_btn = Gtk.Button(label="Energized")
+energy_btn.connect("clicked",energy_clicked)
+
+buttons = [calm_btn, bal_btn, energy_btn]
+
+# Main window
+main_window.set_name("main-window")
+main_window.connect("destroy", Gtk.main_quit)
+bud_text_display.set_name("bud-tex")
+calm_btn.set_name("GtkLabel")
+bal_btn.set_name("GtkLabel")
+energy_btn.set_name("GtkLabel")
+text_display.set_name("prompt")
+
+## Css for color
+provider = Gtk.CssProvider()
+provider.load_from_data(b'''
+    #main-window {
+        background-color: #ffff99;
+    }
+    #prompt {
+        font-size: 20px;
+        font-weight: bold;
+        color: #008600;
+    }
+    #bud-tex {
+        font-size: 20px;
+        font-weight: bold;
+    }
+    #GtkLabel {
+        color: #860000;
+    }
+''')
+
+components = [slider,main_window,bud_text_display,text_display,buttons[0],buttons[1],buttons[2]]
+for component in components:
+    css_context(component)
+
+
+# Set up grid
+grid = Gtk.Grid()
+grid.set_row_spacing(30)
+grid.set_column_spacing(30)
+main_window.add(grid)
+
+
+# Attach contents to grid
+grid.attach(text_display, 0, 0, 3, 1)
+grid.attach(calm_btn, 0, 1, 1, 1)
+grid.attach(bal_btn, 1, 1, 1, 1)
+grid.attach(energy_btn, 2, 1, 1, 1)
+grid.attach(slider, 0,2,3,1)
+grid.attach(bud_text_display, 4, 0, 1, 1)
+
+main_window.show_all()
+Gtk.main()
